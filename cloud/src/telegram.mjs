@@ -31,7 +31,7 @@ async function callTelegram({token,operation,payload,fetchImpl,logger}) {
 
 // This is read-only: getMe validates the configured bot and connection but does
 // not send a message or change any pending event/delivery state.
-export async function checkTelegram({token,fetchImpl=fetch,logger=defaultLogger}) {
+export async function checkTelegram({token,fetchImpl=fetchTelegramIPv4,logger=defaultLogger}) {
   const result=await callTelegram({token,operation:'getMe',fetchImpl,logger});
   if(result.report)return result.report;
   const {response,body}=result;
@@ -44,7 +44,7 @@ export async function checkTelegram({token,fetchImpl=fetch,logger=defaultLogger}
   logger({event:'telegram',operation:'getMe',...report});return report;
 }
 
-export function telegramSender({token,dryRun,fetchImpl=fetch,logger=defaultLogger}) {
+export function telegramSender({token,dryRun,fetchImpl=fetchTelegramIPv4,logger=defaultLogger}) {
   if(!dryRun&&!token) throw Error('TELEGRAM_BOT_TOKEN is required unless DRY_RUN=true');
   return async (event,contact) => {
     if(dryRun) return {status:'simulated'};
@@ -60,3 +60,5 @@ export function telegramSender({token,dryRun,fetchImpl=fetch,logger=defaultLogge
     logger({event:'telegram',operation:'sendMessage',...report});return report;
   };
 }
+import {fetchTelegramIPv4} from './telegram-transport.mjs';
+

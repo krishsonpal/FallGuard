@@ -62,4 +62,6 @@ The phone Site's current canonical origin is `https://fallguard-mobile.krishsonp
 
 With real delivery enabled, startup logs a read-only Telegram `getMe` check. It can identify a wrong/revoked token or a server-to-Telegram connection failure without sending any message. Delivery errors have safe diagnostics; never share a bot token or raw token-bearing exception URL in logs/chat.
 
-See [backend details](cloud/README.md) and the [HTTP API contract](cloud/API.md). Twenty backend checks cover model agreement, deadlines/cancellation, retry identity, freshness, authorization, delivery uncertainty, safe logging, precise conflicts, phone-host migration and Telegram diagnostics.
+Telegram HTTPS requests are scoped to IPv4 after observed dual-stack connection failures on Render; TLS/hostname verification remains enabled. Check the startup `getMe` result before retrying alerts. IPv4 timeouts can still require investigating the hosting route.
+
+See [backend details](cloud/README.md) and the [HTTP API contract](cloud/API.md). Twenty-three backend checks cover model agreement, deadlines/cancellation, retry identity, freshness, authorization, uncertainty, safe logging, conflicts, phone-host migration and Telegram diagnostics/IPv4 transport.
