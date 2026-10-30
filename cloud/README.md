@@ -68,6 +68,11 @@ API requests and rejected preflights now emit JSON log entries with method, know
 - `origin_not_allowed` (403): set `ALLOWED_ORIGINS` to the phone webpage's exact scheme/host/port, without a trailing slash or page path. Do not enter the backend origin unless it also serves the frontend.
 - `device_id_mismatch` (403): the phone is sending a wearable name different from the device entry associated with its key. Match the exact advertised name and case; old browser-queued test events can retain old names.
 - `invalid_access_key` (401): re-enter the correct device's phone key on the webpage; it is held in memory and is lost on reload. The device key is for ESP32 requests.
+- `episode_cooldown` (409): a different positive event reached the server within ten seconds of a resolved/simulated episode. Logs include `retry_after_ms`. This is an alert grouping rule, not a new ML classification.
+- `device_episode_active` (409): an earlier episode remains pending, sending, failed or unknown; logs include `active_state`. An unknown delivery requires review rather than blind resend.
+- `event_deadline_pending`, `event_cancelled`, `event_normal` (409): the same identity already has a deadline/decision incompatible with this dispatch request. `delivery_unknown` reports an ambiguous saved delivery outcome.
+
+`DRY_RUN` controls only Telegram delivery. Actual sensor/model detections still use the normal event path; `simulated` means the message was not sent. Overlapping positive windows or separate queued detections can hit episode rules. The current phone retains simulated results as undelivered; do not assume every retry is a new physical fall or discard real history just to hide conflicts.
 
 If a phone request produces no entry after deploying this logging version, verify that the page is configured with this Render service's HTTPS origin, that `/healthz` loads, that the latest deployment is active, and that Render log filters are not hiding application output. A hosting proxy, a different URL or the frontend host can reject a request before it reaches this application.
 
@@ -82,4 +87,4 @@ The server must stay running for its timer. This is a single-process college dem
 
 ## Validation
 
-`npm test` runs thirteen checks: six saved Keras prediction fixtures on CPU, independent expiry, exact cancellation boundary, duplicate concurrent delivery, overlap protection, normal scores, capture-age validation/recovery, persisted timer recovery, uncertain-send behavior, HTTP authorization/origin/identity validation, quoted configuration parsing, safe startup errors and secret-free rejection/request logging. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.
+`npm test` runs fifteen checks: six saved Keras prediction fixtures on CPU, independent expiry, exact cancellation boundary, duplicate concurrent delivery, overlap protection, normal scores, capture-age validation/recovery, persisted timer recovery, uncertain-send behavior, HTTP authorization/origin/identity validation, quoted configuration parsing, safe startup errors, secret-free request logging and distinction/recovery of cooldown versus unresolved-episode conflicts. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.

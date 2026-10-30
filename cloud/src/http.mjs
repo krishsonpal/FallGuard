@@ -10,17 +10,23 @@ export function createServer({service,devices,origins,checks,logger=entry=>conso
     const origin=req.headers.origin;
     const url=new URL(req.url,'http://localhost');
     let reason='preflight';
+    let conflictDetails={};
     // Record only known route names and canonical origins. Never record query
     // strings, Authorization, body fields, contact IDs, or full request headers.
     let safeOrigin='none';
     if(origin){try{safeOrigin=new URL(origin).origin;}catch{safeOrigin='invalid';}}
     res.once('finish',()=>{
       if(routes[url.pathname]||res.statusCode>=400) {
-        logger({event:'http',method:req.method,path:routes[url.pathname]?url.pathname:'other',origin:safeOrigin,status:res.statusCode,reason});
+        logger({event:'http',method:req.method,path:routes[url.pathname]?url.pathname:'other',origin:safeOrigin,status:res.statusCode,reason,...conflictDetails});
       }
     });
     res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
-    const reply=(status,body)=>{reason=status<400?(body.status||'ok'):(body.code||'request_rejected');res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(body));};
+    const reply=(status,body)=>{
+      reason=status<400?(body.status||'ok'):(body.code||'request_rejected');
+      if(Number.isFinite(body.retry_after_ms)&&body.retry_after_ms>=0)conflictDetails.retry_after_ms=body.retry_after_ms;
+      if(['pending','sending','failed','unknown','sent','simulated','cancelled'].includes(body.active_state))conflictDetails.active_state=body.active_state;
+      res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(body));
+    };
     if(origin&&!origins.includes(origin)) return reply(403,{error:'Origin not allowed',code:'origin_not_allowed'});
     if(origin){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');}
     if(req.method==='OPTIONS') {
@@ -52,7 +58,12 @@ export function createServer({service,devices,origins,checks,logger=entry=>conso
       else {result=service.existing(body.event_key);if(!result)throw Object.assign(Error('Unknown event'),{status:404});}
       const code=result.status==='failed'?503:result.status==='unknown'?409:200;
       // Contact/chat ID and keys never appear in responses.
-      reply(code,result);
-    } catch(error) {reply(error.status||500,{error:error.status?error.message:'Internal server error',code:error.message==='Device identity not authorized'?'device_id_mismatch':'request_rejected'});}
+      reply(code,result.status==='unknown'?{...result,code:'delivery_unknown'}:result);
+    } catch(error) {reply(error.status||500,{
+      error:error.status?error.message:'Internal server error',
+      code:error.code||(error.message==='Device identity not authorized'?'device_id_mismatch':'request_rejected'),
+      ...(Number.isFinite(error.retry_after_ms)?{retry_after_ms:error.retry_after_ms}:{}),
+      ...(error.active_state?{active_state:error.active_state}:{})
+    });}
   });
 }

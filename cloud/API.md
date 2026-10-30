@@ -2,6 +2,8 @@
 
 Use HTTPS in deployment. Requests are JSON objects, max 32 KiB. Error responses have `{ "error": "..." }` with a non-2xx status. Health: `GET /healthz` (no key). All other routes use `Authorization: Bearer <key>` and `Content-Type: application/json`. Browser origins must be explicitly allowed.
 
+Conflict responses include specific `code` values: `episode_cooldown` with `retry_after_ms`, `device_episode_active` with `active_state`, `event_deadline_pending`, `event_cancelled`, `event_normal`, or `delivery_unknown`. The HTTP log's `reason` uses the same code. A 409 describes event/dispatch state, not a negative ML prediction. Dry run simulates message delivery even for genuine positive sensor detections.
+
 ## Identity and replay
 
 Every event request contains `device_id`, `boot_id`, `window_id`, `event_key`. IDs are unsigned 32-bit integers. Key format is exactly `device_id/boot_hex_8_digits/window_hex_8_digits`, lowercase. Example: `FallGuard-ESP32-A1B2C3/0000000a/00000001`. Match the device name advertised over BLE. Retain identity across retries and fallback. Never substitute a new ID just to retry delivery.

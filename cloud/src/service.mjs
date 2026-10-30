@@ -1,4 +1,4 @@
-const fail = (message,status=400) => {throw Object.assign(Error(message),{status});};
+const fail = (message,status=400,code=undefined,details={}) => {throw Object.assign(Error(message),{status,code,...details});};
 const hex = n => n.toString(16).padStart(8,'0');
 export function identity(body, device) {
   if (body.device_id !== device.device_id) fail('Device identity not authorized',403);
@@ -11,13 +11,20 @@ export class Service {
   constructor({store, model, send, clock=()=>Date.now()}) {Object.assign(this,{store,model,send,clock}); this.jobs=new Map();}
   view(e) {return {...e,remaining_ms:e.status==='pending'?Math.max(0,e.deadline-this.clock()):0,threshold:0.44};}
   existing(key) {const e=this.store.get(key);return e?this.view(e):null;}
+  assertNewEpisode(deviceId,now) {
+    const active=this.store.active(deviceId);
+    if(active)fail('Another episode is unresolved for this device',409,'device_episode_active',{active_state:active.status});
+    const recent=this.store.recent(deviceId,now);
+    if(recent)fail('Device is in the 10-second episode cooldown',409,'episode_cooldown',{
+      active_state:recent.status,retry_after_ms:Math.max(0,10000-(now-recent.updated_at))
+    });
+  }
   async infer(body,device) {
     const key=identity(body,device), known=this.existing(key);
     if (known) return known;
     const captured=body.captured_at_ms, received=this.clock();
     if(typeof captured!=='number'||!Number.isFinite(captured)||captured>received+5000||received-captured>30000) fail('Fresh captured_at_ms required (maximum age 30 seconds)');
-    const other=this.store.active(device.device_id)||this.store.recent(device.device_id,this.clock());
-    if (other) fail(`Device already has episode ${other.event_key}`,409);
+    this.assertNewEpisode(device.device_id,this.clock());
     if (body.sample_hz!==50 || body.units!=='m/s2,rad/s') fail('Expected 50 Hz and units m/s2,rad/s');
     // Prediction is synchronous on CPU, so no other request can open an episode mid-inference.
     const score=this.model.predict(body.samples), now=this.clock();
@@ -26,9 +33,9 @@ export class Service {
   cancel(body,device) {
     const key=identity(body,device), e=this.store.get(key);
     if (!e) fail('Unknown event',404);
-    if(e.route!=='cloud') fail('Phone owns cancellation for this event',409);
+    if(e.route!=='cloud') fail('Phone owns cancellation for this event',409,'wrong_timer_owner');
     if(e.status==='cancelled') return this.view(e);
-    if(e.status!=='pending'||this.clock()>=e.deadline) fail('Cancellation deadline elapsed or event resolved',409);
+    if(e.status!=='pending'||this.clock()>=e.deadline) fail('Cancellation deadline elapsed or event resolved',409,'cancellation_closed');
     return this.view(this.store.update(key,'cancelled',this.clock()));
   }
   async phone(body,device) {
@@ -38,11 +45,12 @@ export class Service {
     if(!Number.isFinite(detected)||deadline-detected!==6000||deadline>now) fail('Phone countdown has not elapsed or timestamps invalid');
     let e=this.store.get(key);
     if(!e) {
-      const other=this.store.active(device.device_id)||this.store.recent(device.device_id,now);
-      if(other) fail(`Device already has episode ${other.event_key}`,409);
+      this.assertNewEpisode(device.device_id,now);
       e=this.store.insert({event_key:key,device_id:device.device_id,boot_id:body.boot_id,window_id:body.window_id,route:'phone',score:body.score,detected_at:detected,deadline,status:'pending'});
     }
-    if(e.status==='cancelled'||e.status==='normal'||e.deadline>now) fail('Event is cancelled, normal, or still pending',409);
+    if(e.status==='cancelled')fail('This event was already cancelled',409,'event_cancelled');
+    if(e.status==='normal')fail('This event already has a normal decision',409,'event_normal');
+    if(e.deadline>now)fail('The existing event deadline has not elapsed',409,'event_deadline_pending',{retry_after_ms:e.deadline-now});
     return this.dispatch(key);
   }
   async dispatch(key) {
