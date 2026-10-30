@@ -80,6 +80,10 @@ If a phone request produces no entry after deploying this logging version, verif
 
 ### Delivery states
 
+With real Telegram delivery enabled, startup performs one read-only `getMe` request and logs `event=telegram`, `operation=getMe`. A ready result may include the public bot username. This does not send an alert, validate the recipient chat or reset any event. Outgoing `sendMessage` attempts log status and safe failure categories: `telegram_timeout`, `telegram_connection_failed` (with allowlisted network codes when available), `telegram_non_json_response`, `telegram_api_refused` (HTTP/API error numbers), or `telegram_unexpected_response`. Bot token/URL, recipient chat ID, message body, API description and raw exception text are omitted because they can expose secrets.
+
+For an existing `unknown` outcome, check the recipient's bot conversation before any resend or manual state change. Pause the phone monitor during deployment/diagnosis so it does not create more attempts. On free hosting, a redeploy can replace temporary SQLite storage, so do not treat deployment as a safe way to resolve ambiguity. A successful `getMe` validates the configured token/connection from the server; it does not prove a prior send was delivered.
+
 - `sent`: Telegram accepted this event; further requests with the same key return saved success.
 - `failed`: Telegram explicitly refused the request. Cloud worker retries after 15 seconds; phone events retry when the webpage requests it.
 - `unknown`: timeout, invalid/ambiguous upstream reply, or restart during delivery. The message might already have been accepted. **No automatic resend.** Check Telegram and resolve the event/database manually before continuing that device's demo. This prevents pretending to guarantee exactly-once delivery, which the Bot API does not offer.
@@ -89,4 +93,4 @@ The server must stay running for its timer. This is a single-process college dem
 
 ## Validation
 
-`npm test` runs sixteen checks: six saved Keras prediction fixtures on CPU, independent expiry, exact cancellation boundary, duplicate concurrent delivery, overlap protection, normal scores, capture-age validation/recovery, persisted timer recovery, uncertain-send behavior, HTTP authorization/origin/identity validation, quoted configuration parsing, safe startup errors, secret-free request logging, cooldown/unresolved-episode conflicts and exact phone-host migration compatibility. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.
+`npm test` runs twenty checks covering saved Keras prediction agreement, cloud deadlines/cancellation, retry identity, input freshness, delivery uncertainty/recovery, authorization, safe configuration/request logging, cooldown conflicts, exact phone-host migration, the read-only Telegram probe, transport/API classification and omission of token-bearing exception text. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.

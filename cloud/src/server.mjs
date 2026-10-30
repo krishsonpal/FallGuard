@@ -1,7 +1,7 @@
 import {Store} from './store.mjs';
 import {Service} from './service.mjs';
 import {loadModel} from './model.mjs';
-import {telegramSender} from './telegram.mjs';
+import {telegramSender,checkTelegram} from './telegram.mjs';
 import {createServer} from './http.mjs';
 import {parseDevicesJson,parseAllowedOrigins} from './config.mjs';
 
@@ -25,6 +25,9 @@ const server=createServer({service,devices,origins,checks:model.checks});
 server.requestTimeout=15000;server.headersTimeout=10000;
 let running=false;
 const timer=setInterval(async()=>{if(running)return;running=true;try{await service.tick();}catch{console.error('Event worker failed; inspect service state');}finally{running=false;}},100);
-server.listen(Number(process.env.PORT||8080),process.env.HOST||'0.0.0.0',()=>console.log(`FallGuard ready; model checks=${model.checks.cases}; delivery=${process.env.DRY_RUN==='false'?'Telegram':'DRY RUN'}`));
+server.listen(Number(process.env.PORT||8080),process.env.HOST||'0.0.0.0',()=>{
+  console.log(`FallGuard ready; model checks=${model.checks.cases}; delivery=${process.env.DRY_RUN==='false'?'Telegram':'DRY RUN'}`);
+  if(process.env.DRY_RUN==='false')checkTelegram({token:process.env.TELEGRAM_BOT_TOKEN}).catch(()=>console.error('Telegram read-only startup check could not complete; diagnostic details omitted.'));
+});
 async function stop(){clearInterval(timer);server.close();while(running||service.jobs.size)await new Promise(r=>setTimeout(r,20));store.close();model.close();process.exit(0);}
 process.once('SIGTERM',stop);process.once('SIGINT',stop);

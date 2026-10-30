@@ -60,4 +60,6 @@ Keep `.env` private. Do not overwrite an existing configured file with the examp
 
 The phone Site's current canonical origin is `https://fallguard-mobile.krishsonpal23.chatgpt.site`. Its old `muddynote1024` address redirects there. Existing server configuration explicitly allowing the old origin automatically also permits this exact successor; custom origins remain unchanged and no wildcard is added.
 
-See [backend details](cloud/README.md) and the [HTTP API contract](cloud/API.md). Sixteen backend tests cover model agreement, deadlines/cancellation, retry identity, capture freshness, authorization, simulated delivery, safe configuration/request logging, precise conflicts and exact phone-host migration compatibility.
+With real delivery enabled, startup logs a read-only Telegram `getMe` check. It can identify a wrong/revoked token or a server-to-Telegram connection failure without sending any message. Delivery errors have safe diagnostics; never share a bot token or raw token-bearing exception URL in logs/chat.
+
+See [backend details](cloud/README.md) and the [HTTP API contract](cloud/API.md). Twenty backend checks cover model agreement, deadlines/cancellation, retry identity, freshness, authorization, delivery uncertainty, safe logging, precise conflicts, phone-host migration and Telegram diagnostics.
