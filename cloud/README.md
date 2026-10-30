@@ -70,4 +70,4 @@ The server must stay running for its timer. This is a single-process college dem
 
 ## Validation
 
-`npm test` runs ten checks: six saved Keras prediction fixtures on CPU, independent expiry, exact cancellation boundary, duplicate concurrent delivery, overlap protection, normal scores, capture-age validation/recovery, persisted timer recovery, uncertain-send behavior, and HTTP authorization/origin/identity validation. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.
+`npm test` runs twelve checks: six saved Keras prediction fixtures on CPU, independent expiry, exact cancellation boundary, duplicate concurrent delivery, overlap protection, normal scores, capture-age validation/recovery, persisted timer recovery, uncertain-send behavior, HTTP authorization/origin/identity validation, quoted configuration parsing and prevention of secret exposure in startup logs. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.

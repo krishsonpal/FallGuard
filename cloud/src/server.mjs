@@ -3,8 +3,9 @@ import {Service} from './service.mjs';
 import {loadModel} from './model.mjs';
 import {telegramSender} from './telegram.mjs';
 import {createServer} from './http.mjs';
+import {parseDevicesJson} from './config.mjs';
 
-const devices=JSON.parse(process.env.DEVICES_JSON||'[]');
+const devices=parseDevicesJson(process.env.DEVICES_JSON);
 if(!Array.isArray(devices)||devices.length===0||devices.length>20)throw Error('Configure 1 to 20 entries in DEVICES_JSON');
 const keys=new Set(),ids=new Set();
 for(const d of devices){

@@ -29,6 +29,8 @@ Set environment variables in Render:
 
 Render supplies `PORT`. Do not use the local-only `HOST=127.0.0.1` value on Render. Open `https://YOUR-SERVICE.onrender.com/healthz` after deployment; readiness includes six saved model prediction checks. This request sends no Telegram message.
 
+`DEVICES_JSON` must be valid JSON: keep double quotes around **all string values**, including `chat_id`, `phone_key` and `device_key`. Paste only the JSON array as the environment value, without a leading `DEVICES_JSON=` or extra enclosing quotes. Malformed JSON is rejected with a fixed error that omits the submitted value from startup logs.
+
 No real recipient IDs, bot tokens or access keys are committed. The Telegram recipient must start the configured bot. Enter the backend URL and that device's **phone key** on the phone webpage; use the separate **device key** in the ESP32 configuration.
 
 ## Behavior
@@ -56,4 +58,4 @@ npm start
 
 Keep `.env` private. Do not overwrite an existing configured file with the example. For local-only service checks, open `http://127.0.0.1:8080/healthz`. The actual phone/ESP32 demo uses a reachable HTTPS deployment.
 
-See [backend details](cloud/README.md) and the [HTTP API contract](cloud/API.md). Ten backend tests cover model agreement, deadlines/cancellation, retry identity, capture freshness, authorization and simulated delivery.
+See [backend details](cloud/README.md) and the [HTTP API contract](cloud/API.md). Twelve backend tests cover model agreement, deadlines/cancellation, retry identity, capture freshness, authorization, simulated delivery and safe configuration parsing/logging.
