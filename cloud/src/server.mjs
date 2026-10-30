@@ -16,6 +16,8 @@ for(const d of devices){
 }
 const origins=(process.env.ALLOWED_ORIGINS||'').split(',').map(x=>x.trim()).filter(Boolean);
 if(!origins.length||origins.includes('*'))throw Error('Configure explicit ALLOWED_ORIGINS');
+const logOrigins=origins.map(origin=>{try{return new URL(origin).origin;}catch{return 'invalid';}});
+console.info(JSON.stringify({event:'configuration',device_ids:devices.map(d=>d.device_id),allowed_origins:logOrigins}));
 const send=telegramSender({token:process.env.TELEGRAM_BOT_TOKEN,dryRun:process.env.DRY_RUN!=='false'});
 const model=await loadModel();
 const store=new Store(process.env.DB_PATH||'./data/fallguard.sqlite',devices);

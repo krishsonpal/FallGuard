@@ -58,4 +58,4 @@ npm start
 
 Keep `.env` private. Do not overwrite an existing configured file with the example. For local-only service checks, open `http://127.0.0.1:8080/healthz`. The actual phone/ESP32 demo uses a reachable HTTPS deployment.
 
-See [backend details](cloud/README.md) and the [HTTP API contract](cloud/API.md). Twelve backend tests cover model agreement, deadlines/cancellation, retry identity, capture freshness, authorization, simulated delivery and safe configuration parsing/logging.
+See [backend details](cloud/README.md) and the [HTTP API contract](cloud/API.md). Thirteen backend tests cover model agreement, deadlines/cancellation, retry identity, capture freshness, authorization, simulated delivery and safe configuration/request logging.

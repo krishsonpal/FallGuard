@@ -59,7 +59,19 @@ Start in dry run. Once ready, open the phone webpage's **Connection details**, e
 
 Render free services sleep after inactivity and have no persistent disk. Warm `/healthz` shortly before the demonstration, keep the service active during it, and use a **single instance**. SQLite on free Render is temporary: contacts reload from `DEVICES_JSON`, but event deadlines/history/deduplication can be lost on redeploy or filesystem replacement. Do not replay old browser-queued events across a fresh database without reviewing them. For persistent event recovery use a persistent disk on a paid service or extend the store to an external database. Local SQLite on your computer survives ordinary restarts. [Render free limits](https://render.com/docs/free), [Node version settings](https://render.com/docs/node-version).
 
-## Delivery states and practical limits
+## Troubleshooting and delivery behavior
+
+### Phone HTTP errors
+
+API requests and rejected preflights now emit JSON log entries with method, known route, canonical browser origin, HTTP status and a reason code. Request bodies, Authorization headers and query strings are omitted. Startup lists configured device IDs and canonical origins, without contact IDs or keys.
+
+- `origin_not_allowed` (403): set `ALLOWED_ORIGINS` to the phone webpage's exact scheme/host/port, without a trailing slash or page path. Do not enter the backend origin unless it also serves the frontend.
+- `device_id_mismatch` (403): the phone is sending a wearable name different from the device entry associated with its key. Match the exact advertised name and case; old browser-queued test events can retain old names.
+- `invalid_access_key` (401): re-enter the correct device's phone key on the webpage; it is held in memory and is lost on reload. The device key is for ESP32 requests.
+
+If a phone request produces no entry after deploying this logging version, verify that the page is configured with this Render service's HTTPS origin, that `/healthz` loads, that the latest deployment is active, and that Render log filters are not hiding application output. A hosting proxy, a different URL or the frontend host can reject a request before it reaches this application.
+
+### Delivery states
 
 - `sent`: Telegram accepted this event; further requests with the same key return saved success.
 - `failed`: Telegram explicitly refused the request. Cloud worker retries after 15 seconds; phone events retry when the webpage requests it.
@@ -70,4 +82,4 @@ The server must stay running for its timer. This is a single-process college dem
 
 ## Validation
 
-`npm test` runs twelve checks: six saved Keras prediction fixtures on CPU, independent expiry, exact cancellation boundary, duplicate concurrent delivery, overlap protection, normal scores, capture-age validation/recovery, persisted timer recovery, uncertain-send behavior, HTTP authorization/origin/identity validation, quoted configuration parsing and prevention of secret exposure in startup logs. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.
+`npm test` runs thirteen checks: six saved Keras prediction fixtures on CPU, independent expiry, exact cancellation boundary, duplicate concurrent delivery, overlap protection, normal scores, capture-age validation/recovery, persisted timer recovery, uncertain-send behavior, HTTP authorization/origin/identity validation, quoted configuration parsing, safe startup errors and secret-free rejection/request logging. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.
