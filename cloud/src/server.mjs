@@ -3,7 +3,7 @@ import {Service} from './service.mjs';
 import {loadModel} from './model.mjs';
 import {telegramSender} from './telegram.mjs';
 import {createServer} from './http.mjs';
-import {parseDevicesJson} from './config.mjs';
+import {parseDevicesJson,parseAllowedOrigins} from './config.mjs';
 
 const devices=parseDevicesJson(process.env.DEVICES_JSON);
 if(!Array.isArray(devices)||devices.length===0||devices.length>20)throw Error('Configure 1 to 20 entries in DEVICES_JSON');
@@ -14,8 +14,7 @@ for(const d of devices){
   if(typeof d.wearer!=='string'||!d.wearer||d.wearer.length>100||typeof d.chat_id!=='string'||!d.chat_id)throw Error('Configure wearer and chat_id');
   for(const field of ['phone_key','device_key']){const k=d[field];if(typeof k!=='string'||k.length<32||k.includes('REPLACE')||keys.has(k))throw Error('Use unique random access keys of 32+ characters');keys.add(k);}
 }
-const origins=(process.env.ALLOWED_ORIGINS||'').split(',').map(x=>x.trim()).filter(Boolean);
-if(!origins.length||origins.includes('*'))throw Error('Configure explicit ALLOWED_ORIGINS');
+const origins=parseAllowedOrigins(process.env.ALLOWED_ORIGINS);
 const logOrigins=origins.map(origin=>{try{return new URL(origin).origin;}catch{return 'invalid';}});
 console.info(JSON.stringify({event:'configuration',device_ids:devices.map(d=>d.device_id),allowed_origins:logOrigins}));
 const send=telegramSender({token:process.env.TELEGRAM_BOT_TOKEN,dryRun:process.env.DRY_RUN!=='false'});

@@ -1,12 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {parseDevicesJson} from '../src/config.mjs';
+import {parseDevicesJson,parseAllowedOrigins} from '../src/config.mjs';
 
 test('device JSON preserves quoted chat IDs and access keys',()=>{
   const device={device_id:'FallGuard-ESP32-demo',wearer:'Demo',chat_id:'123456',phone_key:'a'.repeat(64),device_key:'b'.repeat(64)};
   assert.deepEqual(parseDevicesJson(JSON.stringify([device])),[device]);
   assert.deepEqual(parseDevicesJson(undefined),[]);
+});
+
+test('verified phone-host redirect adds only its exact successor to an existing allowlist',()=>{
+  const previous='https://fallguard-mobile.muddynote1024.chatgpt.site';
+  const current='https://fallguard-mobile.krishsonpal23.chatgpt.site';
+  assert.deepEqual(parseAllowedOrigins(previous),[previous,current]);
+  assert.deepEqual(parseAllowedOrigins(previous+','+current),[previous,current]);
+  assert.deepEqual(parseAllowedOrigins('https://custom.example'),['https://custom.example']);
+  assert.throws(()=>parseAllowedOrigins('*'));
+  assert.throws(()=>parseAllowedOrigins(''));
 });
 
 test('malformed secret configuration is absent from process startup logs',()=>{

@@ -63,6 +63,8 @@ Render free services sleep after inactivity and have no persistent disk. Warm `/
 
 ### Phone HTTP errors
 
+The owner-private phone Site migrated to **https://fallguard-mobile.krishsonpal23.chatgpt.site** on 30 October 2026; the former `muddynote1024` URL redirects there. If the former origin is explicitly configured in `ALLOWED_ORIGINS`, the service additionally accepts this exact verified successor. Other origins remain explicitly restricted, and all event requests still need the appropriate per-device key. A custom-host setup is unchanged. You may also configure the new origin directly in Render.
+
 API requests and rejected preflights now emit JSON log entries with method, known route, canonical browser origin, HTTP status and a reason code. Request bodies, Authorization headers and query strings are omitted. Startup lists configured device IDs and canonical origins, without contact IDs or keys.
 
 - `origin_not_allowed` (403): set `ALLOWED_ORIGINS` to the phone webpage's exact scheme/host/port, without a trailing slash or page path. Do not enter the backend origin unless it also serves the frontend.
@@ -87,4 +89,4 @@ The server must stay running for its timer. This is a single-process college dem
 
 ## Validation
 
-`npm test` runs fifteen checks: six saved Keras prediction fixtures on CPU, independent expiry, exact cancellation boundary, duplicate concurrent delivery, overlap protection, normal scores, capture-age validation/recovery, persisted timer recovery, uncertain-send behavior, HTTP authorization/origin/identity validation, quoted configuration parsing, safe startup errors, secret-free request logging and distinction/recovery of cooldown versus unresolved-episode conflicts. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.
+`npm test` runs sixteen checks: six saved Keras prediction fixtures on CPU, independent expiry, exact cancellation boundary, duplicate concurrent delivery, overlap protection, normal scores, capture-age validation/recovery, persisted timer recovery, uncertain-send behavior, HTTP authorization/origin/identity validation, quoted configuration parsing, safe startup errors, secret-free request logging, cooldown/unresolved-episode conflicts and exact phone-host migration compatibility. All Telegram behavior is simulated or mocked; no real message was sent by these checks. Physical BLE/Wi-Fi and Android end-to-end behavior still require the board and phone.
