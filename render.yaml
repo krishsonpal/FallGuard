@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: fallguard-cloud
+    runtime: node
+    plan: free
+    rootDir: cloud
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 24.22.1
+      - key: HOST
+        value: 0.0.0.0
+      - key: DRY_RUN
+        value: "true"
+      - key: ALLOWED_ORIGINS
+        value: https://fallguard-mobile.muddynote1024.chatgpt.site
+      - key: DEVICES_JSON
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false

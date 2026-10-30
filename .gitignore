@@ -1,0 +1,18 @@
+# Local credentials and device settings
+.env
+.env.*
+!.env.example
+**/config_local.h
+
+# Dependencies, generated databases and tools
+node_modules/
+.npm-cache/
+data/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

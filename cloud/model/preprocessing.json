@@ -1,0 +1,36 @@
+{
+  "input_shape": [
+    1,
+    125,
+    6
+  ],
+  "channels": [
+    "ax",
+    "ay",
+    "az",
+    "gx",
+    "gy",
+    "gz"
+  ],
+  "scale": [
+    0.14356957376003265,
+    0.18015038967132568,
+    0.15864995121955872,
+    0.5692144632339478,
+    0.7760694026947021,
+    0.7567089796066284
+  ],
+  "offset": [
+    0.5041662454605103,
+    0.6213623881340027,
+    -0.4656219780445099,
+    0.002641795203089714,
+    0.034888993948698044,
+    0.0352230966091156
+  ],
+  "preprocessing": "raw * scale + offset, once before the browser Layers model",
+  "threshold": 0.44,
+  "saved_keras_normalization_embedded": true,
+  "browser_layers_normalization_embedded": false,
+  "source": "fallguard_training_results/fallguard.keras"
+}
